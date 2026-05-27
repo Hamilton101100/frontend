@@ -1,0 +1,161 @@
+﻿:root {
+  --fondo: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --border: rgba(148, 163, 184, 0.28);
+  --texto: #f8fafc;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(14, 165, 233, 0.16),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(139, 92, 246, 0.12),
+      transparent 20%
+    ),
+    var(--fondo);
+  color: var(--texto);
+}
+
+.form-label {
+  color: #f8fafc;
+}
+
+.form-control,
+.form-select {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #f8fafc;
+}
+
+.form-control::placeholder {
+  color: rgba(248, 250, 252, 0.65);
+}
+
+.form-select {
+  color: #f8fafc;
+}
+
+.form-select option {
+  color: #111827;
+  background-color: #ffffff;
+}
+
+.form-select option:checked {
+  background-color: rgba(14, 165, 233, 0.15);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(14, 165, 233, 0.85);
+  background-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  color: rgba(248, 250, 252, 0.7);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.modal-content {
+  background-color: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+.modal-title,
+.modal-header .btn-close {
+  color: #f8fafc;
+}
+
+.modal .text-secondary {
+  color: rgba(248, 250, 252, 0.78) !important;
+}
+
+.card {
+  background-color: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+}
+
+.card-body {
+  color: #f8fafc;
+}
+
+.oculto {
+  display: none !important;
+}
+
+.campo-contrasena {
+  position: relative;
+}
+
+.campo-contrasena input {
+  padding-right: 3rem;
+}
+
+.btn-mostrar-pass {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(248, 250, 252, 0.7);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-mostrar-pass:hover {
+  color: #ffffff;
+}
+
+.badge-tipo {
+  display: inline-block;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.fila-doble {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .fila-doble {
+    grid-template-columns: 1fr;
+  }
+  .modal-grande {
+    max-width: 100%;
+  }
+}
+
+.btn-nav.active,
+.btn-nav:hover {
+  color: #cffafe !important;
+  background-color: rgba(14, 165, 233, 0.18) !important;
+}
