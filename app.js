@@ -1,5 +1,5 @@
 /* Configuración global */
-const URL_BASE_API = "https://if0_42058316.infinityfreeapp.com/panther/rest";
+const URL_BASE_API = "https://gestionpersonas.infinityfreeapp.com/panther/rest";
 
 const EstadoApp = {
   usuarioAutenticado: false,
