@@ -1,7 +1,5 @@
-/* ==========================================================================
-   1. CONFIGURACIÓN GLOBAL
-   ========================================================================== */
-const URL_BASE_API = "http://localhost/panther/rest";
+/* Configuración global */
+const URL_BASE_API = "https://if0_42058316.infinityfreeapp.com/panther/rest";
 
 const EstadoApp = {
   usuarioAutenticado: false,
@@ -19,9 +17,7 @@ let bsModalDocumento;
 let bsModalPersona;
 let bsModalConfirmar;
 
-/* ==========================================================================
-   2. FUNCIÓN HELPER PARA PETICIONES AUTENTICADAS
-   ========================================================================== */
+/* Función helper para peticiones autenticadas */
 async function fetchConAutenticacion(url, opciones = {}) {
   const configuracion = {
     method: opciones.method || "GET",
@@ -34,9 +30,7 @@ async function fetchConAutenticacion(url, opciones = {}) {
   return fetch(url, configuracion);
 }
 
-/* ==========================================================================
-   3. INICIALIZACIÓN
-   ========================================================================== */
+/* Inicialización */
 document.addEventListener("DOMContentLoaded", () => {
   bsModalDocumento = new bootstrap.Modal(
     document.getElementById("modal-documento"),
@@ -63,9 +57,7 @@ const btnNavPersonas = document.getElementById("btn-nav-personas");
 const btnNavDocumentos = document.getElementById("btn-nav-documentos");
 const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 
-/* ==========================================================================
-   4. NAVEGACIÓN
-   ========================================================================== */
+/* Navegación */
 function configurarNavegacion() {
   btnNavPersonas.addEventListener("click", () => {
     btnNavPersonas.classList.add("active");
@@ -97,9 +89,7 @@ function configurarNavegacion() {
   });
 }
 
-/* ==========================================================================
-   5. LOGIN
-   ========================================================================== */
+/* Formulario de login */
 function configurarFormularioLogin() {
   const formularioLogin = document.getElementById("formulario-login");
   const mensajeError = document.getElementById("error-login");
@@ -152,9 +142,7 @@ function alternarContrasena() {
   campo.type = campo.type === "password" ? "text" : "password";
 }
 
-/* ==========================================================================
-   6. PRECARGA DE PAÍSES, ESTADOS Y CIUDADES EN MEMORIA
-   ========================================================================== */
+/* Precarga de países */
 async function precargarPaises() {
   try {
     const respuesta = await fetchConAutenticacion(
@@ -261,9 +249,7 @@ function alCambiarEstado() {
   selectCiudad.disabled = ciudadesFiltradas.length === 0;
 }
 
-/* ==========================================================================
-   7. MODALES
-   ========================================================================== */
+/* Modal de documentos */
 function abrirModalDocumento(doc = null) {
   EstadoApp.idDocumentoEditando = doc ? doc.id : null;
   document.getElementById("doc-nombre-largo").value = doc
@@ -341,9 +327,7 @@ function cerrarModalConfirmar() {
   accionConfirmada = null;
 }
 
-/* ==========================================================================
-   8. MODAL DE CONFIRMACIÓN
-   ========================================================================== */
+/* Modal de confirmación */
 let accionConfirmada = null;
 
 function configurarModalConfirmacion() {
@@ -362,9 +346,7 @@ function mostrarConfirmacion(mensaje, accion) {
   bsModalConfirmar.show();
 }
 
-/* ==========================================================================
-   9. CRUD: TIPOS DE DOCUMENTO (Actualizado con Clases Bootstrap)
-   ========================================================================== */
+/* CRUD: Tipo de Documento */
 function configurarFormularioDocumentos() {
   document
     .getElementById("form-documento")
@@ -440,7 +422,7 @@ async function cargarTablaDocumentos() {
 
     documentos.forEach((doc, indice) => {
       const fila = document.createElement("tr");
-      // 🌟 BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP CON ICONOS
+      // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
       fila.innerHTML = `
         <td>${indice + 1}</td>
         <td>${doc.nombre_largo || ""}</td>
@@ -508,9 +490,7 @@ async function eliminarDocumento(id) {
   );
 }
 
-/* ==========================================================================
-   10. CRUD: PERSONAS (Actualizado con Clases Bootstrap)
-   ========================================================================== */
+/* CRUD: Personas */
 function configurarFormularioPersonas() {
   document
     .getElementById("form-persona")
@@ -621,7 +601,7 @@ async function cargarTablaPersonas() {
       const nombreCiudad = ciudad ? ciudad.city : "—";
 
       const fila = document.createElement("tr");
-      // 🌟 BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
+      // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
       fila.innerHTML = `
         <td>${indice + 1}</td>
         <td><strong>${persona.name || ""}</strong> ${persona.lastName || ""}</td>
@@ -667,9 +647,7 @@ async function eliminarPersona(id) {
   });
 }
 
-/* ==========================================================================
-   11. NOTIFICACIÓN FLOTANTE
-   ========================================================================== */
+/* Notificación flotante */
 function mostrarNotificacion(mensaje, tipo = "exito") {
   let notificacion = document.getElementById("notificacion-toast");
   if (!notificacion) {
