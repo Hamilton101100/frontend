@@ -130,6 +130,7 @@ function configurarFormularioLogin() {
           cargarSelectTiposDocumento(),
           precargarPaises(),
           precargarEstados(),
+          precargarCiudades(),
         ]);
         await cargarTablaPersonas();
       } else {
