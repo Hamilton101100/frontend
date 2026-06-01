@@ -680,6 +680,30 @@ async function cargarTablaPersonas() {
       return;
     }
 
+    // Obtener nombres de ciudades por id para evitar depender de la precarga global
+    const uniqueCityIds = [
+      ...new Set(personas.map((p) => p.city_id).filter(Boolean)),
+    ];
+    const cityNameMap = {};
+    await Promise.all(
+      uniqueCityIds.map(async (cid) => {
+        try {
+          const r = await fetchConAutenticacion(
+            `${URL_BASE_API}/?PATH_INFO=cities/${cid}`,
+          );
+          if (!r.ok) return;
+          const t = await r.text();
+          const res = JSON.parse(t);
+          if (Array.isArray(res.data) && res.data.length) {
+            const row = res.data[0];
+            cityNameMap[cid] = row.city || row.city_name || row.city || "";
+          }
+        } catch (e) {
+          // ignore per-city failures
+        }
+      }),
+    );
+
     personas.forEach((persona, indice) => {
       const tipoDoc = EstadoApp.tiposDocumento.find(
         (t) => t.id == persona.tipo_documento_id,
@@ -698,10 +722,7 @@ async function cargarTablaPersonas() {
       );
       const nombreEstado = estado ? estado.state : "—";
 
-      const ciudad = EstadoApp.todasLasCiudades.find(
-        (c) => c.id_city == persona.city_id,
-      );
-      const nombreCiudad = ciudad ? ciudad.city : "—";
+      const nombreCiudad = cityNameMap[persona.city_id] || "—";
 
       const fila = document.createElement("tr");
       // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
