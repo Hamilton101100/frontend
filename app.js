@@ -23,6 +23,7 @@ async function fetchConAutenticacion(url, opciones = {}) {
     method: opciones.method || "GET",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       Authorization: EstadoApp.claveAPI || "",
     },
   };
@@ -207,6 +208,14 @@ async function precargarCiudades() {
       EstadoApp.todasLasCiudades = [];
       return;
     }
+    const textoTrim = texto.trim();
+    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
+      console.warn(
+        "precargarCiudades: no se recibió JSON válido, respuesta parece HTML o corrupta",
+      );
+      EstadoApp.todasLasCiudades = [];
+      return;
+    }
     try {
       const resultado = JSON.parse(texto);
       EstadoApp.todasLasCiudades = Array.isArray(resultado.data)
@@ -235,6 +244,13 @@ async function cargarCiudadesPorEstado(estadoId) {
     }
     const texto = await respuesta.text();
     if (!texto) return [];
+    const textoTrim = texto.trim();
+    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
+      console.warn(
+        "cargarCiudadesPorEstado: no se recibió JSON válido, respuesta parece HTML o corrupta",
+      );
+      return [];
+    }
     try {
       const resultado = JSON.parse(texto);
       return Array.isArray(resultado.data) ? resultado.data : [];
