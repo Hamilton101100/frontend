@@ -125,14 +125,13 @@ function configurarFormularioLogin() {
         formularioLogin.reset();
         seccionLogin.classList.add("oculto");
         panelPrincipal.classList.remove("oculto");
-        // Precarga todos los datos al iniciar sesión
+        // Precarga los datos necesarios al iniciar sesión
         await Promise.all([
-          cargarTablaPersonas(),
           cargarSelectTiposDocumento(),
           precargarPaises(),
           precargarEstados(),
-          precargarCiudades(),
         ]);
+        await cargarTablaPersonas();
       } else {
         mensajeError.textContent = "Credenciales incorrectas.";
         mensajeError.classList.remove("oculto");
