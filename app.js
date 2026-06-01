@@ -110,7 +110,14 @@ function configurarFormularioLogin() {
           body: JSON.stringify({ user: usuario, password: contrasena }),
         },
       );
-      const resultado = await respuesta.json();
+      if (!respuesta.ok) {
+        throw new Error(`Error HTTP: ${respuesta.status}`);
+      }
+      const texto = await respuesta.text();
+      if (!texto) {
+        throw new Error("Respuesta vacía del servidor");
+      }
+      const resultado = JSON.parse(texto);
 
       if (resultado.code === 200 && resultado.data) {
         EstadoApp.usuarioAutenticado = true;
@@ -148,13 +155,20 @@ async function precargarPaises() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=countries`,
     );
-    const resultado = await respuesta.json();
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    if (!texto) {
+      throw new Error("Respuesta vacía del servidor");
+    }
+    const resultado = JSON.parse(texto);
     EstadoApp.todosLosPaises = Array.isArray(resultado.data)
       ? resultado.data
       : [];
     llenarSelectPaises();
   } catch (error) {
-    console.error("Error al precargar países:", error);
+    console.error("Error al precargar países:", error.message || error);
   }
 }
 
@@ -163,12 +177,19 @@ async function precargarEstados() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=states`,
     );
-    const resultado = await respuesta.json();
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    if (!texto) {
+      throw new Error("Respuesta vacía del servidor");
+    }
+    const resultado = JSON.parse(texto);
     EstadoApp.todosLosEstados = Array.isArray(resultado.data)
       ? resultado.data
       : [];
   } catch (error) {
-    console.error("Error al precargar estados:", error);
+    console.error("Error al precargar estados:", error.message || error);
   }
 }
 
@@ -177,12 +198,42 @@ async function precargarCiudades() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=cities`,
     );
-    const resultado = await respuesta.json();
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    if (!texto) {
+      throw new Error("Respuesta vacía del servidor");
+    }
+    const resultado = JSON.parse(texto);
     EstadoApp.todasLasCiudades = Array.isArray(resultado.data)
       ? resultado.data
       : [];
   } catch (error) {
-    console.error("Error al precargar ciudades:", error);
+    console.error("Error al precargar ciudades:", error.message || error);
+  }
+}
+
+async function cargarCiudadesPorEstado(estadoId) {
+  try {
+    const respuesta = await fetchConAutenticacion(
+      `${URL_BASE_API}/?PATH_INFO=cities/state/${estadoId}`,
+    );
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    if (!texto) {
+      return [];
+    }
+    const resultado = JSON.parse(texto);
+    return Array.isArray(resultado.data) ? resultado.data : [];
+  } catch (error) {
+    console.error(
+      "Error al cargar ciudades por estado:",
+      error.message || error,
+    );
+    return [];
   }
 }
 
@@ -225,7 +276,7 @@ function alCambiarPais() {
   selectEstado.disabled = estadosFiltrados.length === 0;
 }
 
-function alCambiarEstado() {
+async function alCambiarEstado() {
   const estadoId = document.getElementById("persona-estado").value;
   const selectCiudad = document.getElementById("persona-ciudad");
 
@@ -235,9 +286,7 @@ function alCambiarEstado() {
 
   if (!estadoId) return;
 
-  const ciudadesFiltradas = EstadoApp.todasLasCiudades.filter(
-    (c) => String(c.state_id) === String(estadoId),
-  );
+  const ciudadesFiltradas = await cargarCiudadesPorEstado(estadoId);
 
   ciudadesFiltradas.forEach((ciudad) => {
     const opcion = document.createElement("option");
@@ -270,7 +319,7 @@ function cerrarModalDocumento() {
   EstadoApp.idDocumentoEditando = null;
 }
 
-function abrirModalPersona(persona = null) {
+async function abrirModalPersona(persona = null) {
   EstadoApp.idPersonaEditando = persona ? persona.id : null;
 
   document.getElementById("persona-nombre").value = persona ? persona.name : "";
@@ -294,7 +343,7 @@ function abrirModalPersona(persona = null) {
     alCambiarPais();
     if (persona.state_id) {
       document.getElementById("persona-estado").value = persona.state_id;
-      alCambiarEstado();
+      await alCambiarEstado();
       if (persona.city_id) {
         document.getElementById("persona-ciudad").value = persona.city_id;
       }
@@ -380,7 +429,11 @@ function configurarFormularioDocumentos() {
             nombre_corto: nombreCorto,
           }),
         });
-        const resultado = await respuesta.json();
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+        const texto = await respuesta.text();
+        const resultado = JSON.parse(texto);
 
         if (resultado.code === 200 || resultado.code === 201) {
           cerrarModalDocumento();
@@ -406,10 +459,14 @@ async function cargarTablaDocumentos() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=tipodocumentos`,
     );
-    const resultado = await respuesta.json();
-    const documentos = Array.isArray(resultado.data)
-      ? resultado.data.filter((d) => !d.dateDelete)
-      : [];
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    if (!texto) {
+      throw new Error("Respuesta vacía");
+    }
+    const resultado = JSON.parse(texto);
 
     EstadoApp.tiposDocumento = documentos;
     cuerpoTabla.innerHTML = "";
@@ -450,7 +507,11 @@ async function cargarSelectTiposDocumento() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=tipodocumentos`,
     );
-    const resultado = await respuesta.json();
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    const resultado = JSON.parse(texto);
     const documentos = Array.isArray(resultado.data)
       ? resultado.data.filter((d) => !d.dateDelete)
       : [];
@@ -476,7 +537,11 @@ async function eliminarDocumento(id) {
           `${URL_BASE_API}/?PATH_INFO=tipodocumentos/${id}`,
           { method: "DELETE" },
         );
-        const resultado = await respuesta.json();
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+        const texto = await respuesta.text();
+        const resultado = JSON.parse(texto);
         if (resultado.code === 200) {
           cargarTablaDocumentos();
           mostrarNotificacion("Tipo eliminado correctamente.");
@@ -492,6 +557,18 @@ async function eliminarDocumento(id) {
 
 /* CRUD: Personas */
 function configurarFormularioPersonas() {
+  const selectPais = document.getElementById("persona-pais");
+  const selectEstado = document.getElementById("persona-estado");
+
+  if (selectPais) {
+    selectPais.addEventListener("change", alCambiarPais);
+  }
+  if (selectEstado) {
+    selectEstado.addEventListener("change", () => {
+      alCambiarEstado();
+    });
+  }
+
   document
     .getElementById("form-persona")
     .addEventListener("submit", async (evento) => {
@@ -533,7 +610,11 @@ function configurarFormularioPersonas() {
           method: metodo,
           body: JSON.stringify(datos),
         });
-        const resultado = await respuesta.json();
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+        const texto = await respuesta.text();
+        const resultado = JSON.parse(texto);
 
         if (resultado.code === 200 || resultado.code === 201) {
           cerrarModalPersona();
@@ -564,7 +645,11 @@ async function cargarTablaPersonas() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=persons`,
     );
-    const resultado = await respuesta.json();
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+    const texto = await respuesta.text();
+    const resultado = JSON.parse(texto);
     const personas = Array.isArray(resultado.data)
       ? resultado.data.filter((p) => !p.dateDelete)
       : [];
@@ -634,7 +719,14 @@ async function eliminarPersona(id) {
         `${URL_BASE_API}/?PATH_INFO=persons/${id}`,
         { method: "DELETE" },
       );
-      const resultado = await respuesta.json();
+      if (!respuesta.ok) {
+        throw new Error(`Error HTTP: ${respuesta.status}`);
+      }
+      const texto = await respuesta.text();
+      if (!texto) {
+        throw new Error("Respuesta vacía del servidor");
+      }
+      const resultado = JSON.parse(texto);
       if (resultado.code === 200) {
         cargarTablaPersonas();
         mostrarNotificacion("Persona eliminada correctamente.");
