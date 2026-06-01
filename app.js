@@ -1,7 +1,5 @@
-/* Configuración global */
+/* Configuración inicial */
 const URL_BASE_API = "https://gestionpersonas.infinityfreeapp.com/panther/rest";
-const URL_LOCAL_API = "http://localhost/panther/rest"; // fallback local
-let usoFallbackLocal = false; // marca si ya cambiamos a local en esta sesión
 
 const EstadoApp = {
   usuarioAutenticado: false,
@@ -9,17 +7,15 @@ const EstadoApp = {
   idPersonaEditando: null,
   idDocumentoEditando: null,
   tiposDocumento: [],
-  // Datos en memoria para los selects en cascada
   todosLosPaises: [],
   todosLosEstados: [],
-  todasLasCiudades: [],
 };
 
 let bsModalDocumento;
 let bsModalPersona;
 let bsModalConfirmar;
 
-/* Función helper para peticiones autenticadas */
+/* Helper: peticiones autenticadas */
 async function fetchConAutenticacion(url, opciones = {}) {
   const configuracion = {
     method: opciones.method || "GET",
@@ -30,50 +26,10 @@ async function fetchConAutenticacion(url, opciones = {}) {
     },
   };
   if (opciones.body) configuracion.body = opciones.body;
-
-  // Primera petición al URL indicado
-  let respuesta = await fetch(url, configuracion);
-
-  // Si el servidor indica JSON en headers, devolvemos la respuesta original
-  const contentType = (
-    respuesta.headers.get("content-type") || ""
-  ).toLowerCase();
-  if (contentType.includes("application/json")) return respuesta;
-
-  // Si no es JSON en headers, leemos el texto para comprobar si es HTML/JS de protección
-  const texto = await respuesta.text();
-  const textoTrim = texto.trim();
-
-  // Si parece HTML o no comienza por '{', intentamos fallback a la API local UNA VEZ
-  if (
-    (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) &&
-    !usoFallbackLocal
-  ) {
-    try {
-      console.warn(
-        "fetchConAutenticacion: respuesta remota no JSON, intentando fallback a API local",
-      );
-      usoFallbackLocal = true;
-      const nuevaUrl = url.replace(URL_BASE_API, URL_LOCAL_API);
-      const respLocal = await fetch(nuevaUrl, configuracion);
-      return respLocal;
-    } catch (e) {
-      // Si falla el fallback, devolvemos la respuesta original (ya leída)
-      return new Response(texto, {
-        status: respuesta.status,
-        headers: { "Content-Type": contentType || "text/plain" },
-      });
-    }
-  }
-
-  // Si no corresponde al caso de fallback, reconstruimos una Response con el texto leido
-  return new Response(texto, {
-    status: respuesta.status,
-    headers: { "Content-Type": contentType || "text/plain" },
-  });
+  return await fetch(url, configuracion);
 }
 
-/* Inicialización */
+/* Inicialización*/
 document.addEventListener("DOMContentLoaded", () => {
   bsModalDocumento = new bootstrap.Modal(
     document.getElementById("modal-documento"),
@@ -100,7 +56,7 @@ const btnNavPersonas = document.getElementById("btn-nav-personas");
 const btnNavDocumentos = document.getElementById("btn-nav-documentos");
 const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 
-/* Navegación */
+/*Navegación*/
 function configurarNavegacion() {
   btnNavPersonas.addEventListener("click", () => {
     btnNavPersonas.classList.add("active");
@@ -126,13 +82,12 @@ function configurarNavegacion() {
     EstadoApp.idDocumentoEditando = null;
     EstadoApp.todosLosPaises = [];
     EstadoApp.todosLosEstados = [];
-    EstadoApp.todasLasCiudades = [];
     panelPrincipal.classList.add("oculto");
     seccionLogin.classList.remove("oculto");
   });
 }
 
-/* Formulario de login */
+/*Login*/
 function configurarFormularioLogin() {
   const formularioLogin = document.getElementById("formulario-login");
   const mensajeError = document.getElementById("error-login");
@@ -152,19 +107,11 @@ function configurarFormularioLogin() {
           body: JSON.stringify({ user: usuario, password: contrasena }),
         },
       );
-      if (!respuesta.ok) {
-        throw new Error(`Error HTTP: ${respuesta.status}`);
-      }
+      if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+
       const texto = await respuesta.text();
-      if (!texto) {
-        throw new Error("Respuesta vacía del servidor");
-      }
-      const textoTrimLogin = texto.trim();
-      if (textoTrimLogin.startsWith("<") || !textoTrimLogin.startsWith("{")) {
-        throw new Error(
-          "Respuesta del servidor no es JSON válido (posible protección del host)",
-        );
-      }
+      if (!texto) throw new Error("Respuesta vacía del servidor");
+
       const resultado = JSON.parse(texto);
 
       if (resultado.code === 200 && resultado.data) {
@@ -173,7 +120,6 @@ function configurarFormularioLogin() {
         formularioLogin.reset();
         seccionLogin.classList.add("oculto");
         panelPrincipal.classList.remove("oculto");
-        // Precarga los datos necesarios al iniciar sesión
         await Promise.all([
           cargarSelectTiposDocumento(),
           precargarPaises(),
@@ -196,29 +142,14 @@ function alternarContrasena() {
   campo.type = campo.type === "password" ? "text" : "password";
 }
 
-/* Precarga de países */
+/* Precarga de países y estados */
 async function precargarPaises() {
   try {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=countries`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    if (!texto) {
-      throw new Error("Respuesta vacía del servidor");
-    }
-    const textoTrim = texto.trim();
-    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
-      console.warn(
-        "precargarPaises: no se recibió JSON válido, respuesta parece HTML o corrupta",
-      );
-      EstadoApp.todosLosPaises = [];
-      llenarSelectPaises();
-      return;
-    }
-    const resultado = JSON.parse(texto);
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
     EstadoApp.todosLosPaises = Array.isArray(resultado.data)
       ? resultado.data
       : [];
@@ -233,22 +164,8 @@ async function precargarEstados() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=states`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    if (!texto) {
-      throw new Error("Respuesta vacía del servidor");
-    }
-    const textoTrim = texto.trim();
-    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
-      console.warn(
-        "precargarEstados: no se recibió JSON válido, respuesta parece HTML o corrupta",
-      );
-      EstadoApp.todosLosEstados = [];
-      return;
-    }
-    const resultado = JSON.parse(texto);
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
     EstadoApp.todosLosEstados = Array.isArray(resultado.data)
       ? resultado.data
       : [];
@@ -257,74 +174,14 @@ async function precargarEstados() {
   }
 }
 
-async function precargarCiudades() {
-  try {
-    const respuesta = await fetchConAutenticacion(
-      `${URL_BASE_API}/?PATH_INFO=cities`,
-    );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    if (!texto) {
-      console.warn("precargarCiudades: respuesta vacía");
-      EstadoApp.todasLasCiudades = [];
-      return;
-    }
-    const textoTrim = texto.trim();
-    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
-      console.warn(
-        "precargarCiudades: no se recibió JSON válido, respuesta parece HTML o corrupta",
-      );
-      EstadoApp.todasLasCiudades = [];
-      return;
-    }
-    try {
-      const resultado = JSON.parse(texto);
-      EstadoApp.todasLasCiudades = Array.isArray(resultado.data)
-        ? resultado.data
-        : [];
-    } catch (err) {
-      console.error("Error al parsear JSON de ciudades:", err);
-      console.error(
-        "Respuesta cruda (primeros 2000 chars):",
-        texto.slice(0, 2000),
-      );
-      EstadoApp.todasLasCiudades = [];
-    }
-  } catch (error) {
-    console.error("Error al precargar ciudades:", error.message || error);
-  }
-}
-
 async function cargarCiudadesPorEstado(estadoId) {
   try {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=cities/state/${estadoId}`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    if (!texto) return [];
-    const textoTrim = texto.trim();
-    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
-      console.warn(
-        "cargarCiudadesPorEstado: no se recibió JSON válido, respuesta parece HTML o corrupta",
-      );
-      return [];
-    }
-    try {
-      const resultado = JSON.parse(texto);
-      return Array.isArray(resultado.data) ? resultado.data : [];
-    } catch (err) {
-      console.error("Error al parsear JSON ciudades por estado:", err);
-      console.error(
-        "Respuesta cruda (primeros 2000 chars):",
-        texto.slice(0, 2000),
-      );
-      return [];
-    }
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
+    return Array.isArray(resultado.data) ? resultado.data : [];
   } catch (error) {
     console.error(
       "Error al cargar ciudades por estado:",
@@ -334,6 +191,7 @@ async function cargarCiudadesPorEstado(estadoId) {
   }
 }
 
+/* Selects en cascada: País → Estado → Ciudad*/
 function llenarSelectPaises() {
   const select = document.getElementById("persona-pais");
   select.innerHTML = '<option value="">-- Seleccione un país --</option>';
@@ -362,14 +220,12 @@ function alCambiarPais() {
   const estadosFiltrados = EstadoApp.todosLosEstados.filter(
     (e) => String(e.country_id) === String(paisId),
   );
-
   estadosFiltrados.forEach((estado) => {
     const opcion = document.createElement("option");
     opcion.value = estado.id_state;
     opcion.textContent = estado.state;
     selectEstado.appendChild(opcion);
   });
-
   selectEstado.disabled = estadosFiltrados.length === 0;
 }
 
@@ -384,18 +240,16 @@ async function alCambiarEstado() {
   if (!estadoId) return;
 
   const ciudadesFiltradas = await cargarCiudadesPorEstado(estadoId);
-
   ciudadesFiltradas.forEach((ciudad) => {
     const opcion = document.createElement("option");
     opcion.value = ciudad.id_city;
     opcion.textContent = ciudad.city;
     selectCiudad.appendChild(opcion);
   });
-
   selectCiudad.disabled = ciudadesFiltradas.length === 0;
 }
 
-/* Modal de documentos */
+/* Modal Documento */
 function abrirModalDocumento(doc = null) {
   EstadoApp.idDocumentoEditando = doc ? doc.id : null;
   document.getElementById("doc-nombre-largo").value = doc
@@ -416,6 +270,7 @@ function cerrarModalDocumento() {
   EstadoApp.idDocumentoEditando = null;
 }
 
+/* Modal Persona */
 async function abrirModalPersona(persona = null) {
   await cargarSelectTiposDocumento();
   EstadoApp.idPersonaEditando = persona ? persona.id : null;
@@ -469,12 +324,7 @@ function cerrarModalPersona() {
   document.getElementById("persona-ciudad").disabled = true;
 }
 
-function cerrarModalConfirmar() {
-  bsModalConfirmar.hide();
-  accionConfirmada = null;
-}
-
-/* Modal de confirmación */
+/* Modal Confirmación */
 let accionConfirmada = null;
 
 function configurarModalConfirmacion() {
@@ -485,6 +335,11 @@ function configurarModalConfirmacion() {
       if (accionConfirmada) accionConfirmada();
       accionConfirmada = null;
     });
+}
+
+function cerrarModalConfirmar() {
+  bsModalConfirmar.hide();
+  accionConfirmada = null;
 }
 
 function mostrarConfirmacion(mensaje, accion) {
@@ -527,11 +382,8 @@ function configurarFormularioDocumentos() {
             nombre_corto: nombreCorto,
           }),
         });
-        if (!respuesta.ok) {
-          throw new Error(`Error HTTP: ${respuesta.status}`);
-        }
-        const texto = await respuesta.text();
-        const resultado = JSON.parse(texto);
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
 
         if (resultado.code === 200 || resultado.code === 201) {
           cerrarModalDocumento();
@@ -557,16 +409,8 @@ async function cargarTablaDocumentos() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=tipodocumentos`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    if (!texto) {
-      throw new Error("Respuesta vacía");
-    }
-    const resultado = JSON.parse(texto);
-
-    // ← LÍNEA QUE FALTABA
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
     const documentos = Array.isArray(resultado.data)
       ? resultado.data.filter((d) => !d.dateDelete)
       : [];
@@ -609,11 +453,8 @@ async function cargarSelectTiposDocumento() {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=tipodocumentos`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    const resultado = JSON.parse(texto);
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
     const documentos = Array.isArray(resultado.data)
       ? resultado.data.filter((d) => !d.dateDelete)
       : [];
@@ -639,11 +480,8 @@ async function eliminarDocumento(id) {
           `${URL_BASE_API}/?PATH_INFO=tipodocumentos/${id}`,
           { method: "DELETE" },
         );
-        if (!respuesta.ok) {
-          throw new Error(`Error HTTP: ${respuesta.status}`);
-        }
-        const texto = await respuesta.text();
-        const resultado = JSON.parse(texto);
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
         if (resultado.code === 200) {
           cargarTablaDocumentos();
           mostrarNotificacion("Tipo eliminado correctamente.");
@@ -662,14 +500,8 @@ function configurarFormularioPersonas() {
   const selectPais = document.getElementById("persona-pais");
   const selectEstado = document.getElementById("persona-estado");
 
-  if (selectPais) {
-    selectPais.addEventListener("change", alCambiarPais);
-  }
-  if (selectEstado) {
-    selectEstado.addEventListener("change", () => {
-      alCambiarEstado();
-    });
-  }
+  if (selectPais) selectPais.addEventListener("change", alCambiarPais);
+  if (selectEstado) selectEstado.addEventListener("change", alCambiarEstado);
 
   document
     .getElementById("form-persona")
@@ -716,16 +548,11 @@ function configurarFormularioPersonas() {
           const textoError = await respuesta.text();
           let mensaje = `Error HTTP: ${respuesta.status}`;
           try {
-            const errorJson = JSON.parse(textoError);
-            mensaje = errorJson.message || mensaje;
-          } catch (e) {
-            if (textoError) mensaje = textoError;
-          }
+            mensaje = JSON.parse(textoError).message || mensaje;
+          } catch (e) {}
           throw new Error(mensaje);
         }
-        const texto = await respuesta.text();
-        const resultado = JSON.parse(texto);
-
+        const resultado = await respuesta.json();
         if (resultado.code === 200 || resultado.code === 201) {
           cerrarModalPersona();
           cargarTablaPersonas();
@@ -748,24 +575,16 @@ async function cargarTablaPersonas() {
   cuerpoTabla.innerHTML = "<tr><td colspan='9'>Cargando personas...</td></tr>";
 
   try {
-    if (EstadoApp.tiposDocumento.length === 0) {
+    if (EstadoApp.tiposDocumento.length === 0)
       await cargarSelectTiposDocumento();
-    }
-    if (EstadoApp.todosLosPaises.length === 0) {
-      await precargarPaises();
-    }
-    if (EstadoApp.todosLosEstados.length === 0) {
-      await precargarEstados();
-    }
+    if (EstadoApp.todosLosPaises.length === 0) await precargarPaises();
+    if (EstadoApp.todosLosEstados.length === 0) await precargarEstados();
 
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=persons`,
     );
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-    const texto = await respuesta.text();
-    const resultado = JSON.parse(texto);
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
     const personas = Array.isArray(resultado.data)
       ? resultado.data.filter((p) => !p.dateDelete)
       : [];
@@ -778,7 +597,7 @@ async function cargarTablaPersonas() {
       return;
     }
 
-    // ── Mapa de ciudades ──────────────────────────────────────────
+    // Mapa de ciudades agrupado por state_id (1 petición por estado)
     const uniqueStateIds = [
       ...new Set(personas.map((p) => p.state_id).filter(Boolean)),
     ];
@@ -790,10 +609,7 @@ async function cargarTablaPersonas() {
             `${URL_BASE_API}/?PATH_INFO=cities/state/${sid}`,
           );
           if (!r.ok) return;
-          const t = await r.text();
-          const trimmed = t.trim();
-          if (!trimmed.startsWith("{")) return;
-          const res = JSON.parse(trimmed);
+          const res = await r.json();
           if (Array.isArray(res.data)) {
             res.data.forEach((c) => {
               cityNameMap[Number(c.id_city)] = c.city || "";
@@ -812,29 +628,23 @@ async function cargarTablaPersonas() {
       const nombreTipo = tipoDoc
         ? `<span class="badge-tipo">${tipoDoc.nombre_corto}</span>`
         : "—";
-
       const pais = EstadoApp.todosLosPaises.find(
         (p) => p.country_id == persona.country_id,
       );
-      const nombrePais = pais ? pais.country_name : "—";
-
       const estado = EstadoApp.todosLosEstados.find(
         (e) => e.id_state == persona.state_id,
       );
-      const nombreEstado = estado ? estado.state : "—";
-
       const nombreCiudad = cityNameMap[Number(persona.city_id)] || "—";
 
       const fila = document.createElement("tr");
-      // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
       fila.innerHTML = `
         <td>${indice + 1}</td>
         <td><strong>${persona.name || ""}</strong> ${persona.lastName || ""}</td>
         <td>${persona.phone ? String(persona.phone) : "—"}</td>
         <td>${persona.numero_documento || "—"}</td>
         <td>${nombreTipo}</td>
-        <td>${nombrePais}</td>
-        <td>${nombreEstado}</td>
+        <td>${pais ? pais.country_name : "—"}</td>
+        <td>${estado ? estado.state : "—"}</td>
         <td>${nombreCiudad}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalPersona(${JSON.stringify(persona)})'>
@@ -859,14 +669,8 @@ async function eliminarPersona(id) {
         `${URL_BASE_API}/?PATH_INFO=persons/${id}`,
         { method: "DELETE" },
       );
-      if (!respuesta.ok) {
-        throw new Error(`Error HTTP: ${respuesta.status}`);
-      }
-      const texto = await respuesta.text();
-      if (!texto) {
-        throw new Error("Respuesta vacía del servidor");
-      }
-      const resultado = JSON.parse(texto);
+      if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+      const resultado = await respuesta.json();
       if (resultado.code === 200) {
         cargarTablaPersonas();
         mostrarNotificacion("Persona eliminada correctamente.");
