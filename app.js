@@ -145,11 +145,10 @@ function configurarFormularioLogin() {
     const contrasena = document.getElementById("contrasena").value;
 
     try {
-      const respuesta = await fetch(
+      const respuesta = await fetchConAutenticacion(
         `${URL_BASE_API}/?PATH_INFO=useraction/login`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user: usuario, password: contrasena }),
         },
       );
@@ -159,6 +158,12 @@ function configurarFormularioLogin() {
       const texto = await respuesta.text();
       if (!texto) {
         throw new Error("Respuesta vacía del servidor");
+      }
+      const textoTrimLogin = texto.trim();
+      if (textoTrimLogin.startsWith("<") || !textoTrimLogin.startsWith("{")) {
+        throw new Error(
+          "Respuesta del servidor no es JSON válido (posible protección del host)",
+        );
       }
       const resultado = JSON.parse(texto);
 
@@ -205,6 +210,15 @@ async function precargarPaises() {
     if (!texto) {
       throw new Error("Respuesta vacía del servidor");
     }
+    const textoTrim = texto.trim();
+    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
+      console.warn(
+        "precargarPaises: no se recibió JSON válido, respuesta parece HTML o corrupta",
+      );
+      EstadoApp.todosLosPaises = [];
+      llenarSelectPaises();
+      return;
+    }
     const resultado = JSON.parse(texto);
     EstadoApp.todosLosPaises = Array.isArray(resultado.data)
       ? resultado.data
@@ -226,6 +240,14 @@ async function precargarEstados() {
     const texto = await respuesta.text();
     if (!texto) {
       throw new Error("Respuesta vacía del servidor");
+    }
+    const textoTrim = texto.trim();
+    if (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) {
+      console.warn(
+        "precargarEstados: no se recibió JSON válido, respuesta parece HTML o corrupta",
+      );
+      EstadoApp.todosLosEstados = [];
+      return;
     }
     const resultado = JSON.parse(texto);
     EstadoApp.todosLosEstados = Array.isArray(resultado.data)
