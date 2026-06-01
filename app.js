@@ -1,5 +1,7 @@
 /* Configuración global */
 const URL_BASE_API = "https://gestionpersonas.infinityfreeapp.com/panther/rest";
+const URL_LOCAL_API = "http://localhost/panther/rest"; // fallback local
+let usoFallbackLocal = false; // marca si ya cambiamos a local en esta sesión
 
 const EstadoApp = {
   usuarioAutenticado: false,
@@ -28,7 +30,47 @@ async function fetchConAutenticacion(url, opciones = {}) {
     },
   };
   if (opciones.body) configuracion.body = opciones.body;
-  return fetch(url, configuracion);
+
+  // Primera petición al URL indicado
+  let respuesta = await fetch(url, configuracion);
+
+  // Si el servidor indica JSON en headers, devolvemos la respuesta original
+  const contentType = (
+    respuesta.headers.get("content-type") || ""
+  ).toLowerCase();
+  if (contentType.includes("application/json")) return respuesta;
+
+  // Si no es JSON en headers, leemos el texto para comprobar si es HTML/JS de protección
+  const texto = await respuesta.text();
+  const textoTrim = texto.trim();
+
+  // Si parece HTML o no comienza por '{', intentamos fallback a la API local UNA VEZ
+  if (
+    (textoTrim.startsWith("<") || !textoTrim.startsWith("{")) &&
+    !usoFallbackLocal
+  ) {
+    try {
+      console.warn(
+        "fetchConAutenticacion: respuesta remota no JSON, intentando fallback a API local",
+      );
+      usoFallbackLocal = true;
+      const nuevaUrl = url.replace(URL_BASE_API, URL_LOCAL_API);
+      const respLocal = await fetch(nuevaUrl, configuracion);
+      return respLocal;
+    } catch (e) {
+      // Si falla el fallback, devolvemos la respuesta original (ya leída)
+      return new Response(texto, {
+        status: respuesta.status,
+        headers: { "Content-Type": contentType || "text/plain" },
+      });
+    }
+  }
+
+  // Si no corresponde al caso de fallback, reconstruimos una Response con el texto leido
+  return new Response(texto, {
+    status: respuesta.status,
+    headers: { "Content-Type": contentType || "text/plain" },
+  });
 }
 
 /* Inicialización */
