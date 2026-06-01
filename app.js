@@ -203,12 +203,23 @@ async function precargarCiudades() {
     }
     const texto = await respuesta.text();
     if (!texto) {
-      throw new Error("Respuesta vacía del servidor");
+      console.warn("precargarCiudades: respuesta vacía");
+      EstadoApp.todasLasCiudades = [];
+      return;
     }
-    const resultado = JSON.parse(texto);
-    EstadoApp.todasLasCiudades = Array.isArray(resultado.data)
-      ? resultado.data
-      : [];
+    try {
+      const resultado = JSON.parse(texto);
+      EstadoApp.todasLasCiudades = Array.isArray(resultado.data)
+        ? resultado.data
+        : [];
+    } catch (err) {
+      console.error("Error al parsear JSON de ciudades:", err);
+      console.error(
+        "Respuesta cruda (primeros 2000 chars):",
+        texto.slice(0, 2000),
+      );
+      EstadoApp.todasLasCiudades = [];
+    }
   } catch (error) {
     console.error("Error al precargar ciudades:", error.message || error);
   }
@@ -223,11 +234,18 @@ async function cargarCiudadesPorEstado(estadoId) {
       throw new Error(`Error HTTP: ${respuesta.status}`);
     }
     const texto = await respuesta.text();
-    if (!texto) {
+    if (!texto) return [];
+    try {
+      const resultado = JSON.parse(texto);
+      return Array.isArray(resultado.data) ? resultado.data : [];
+    } catch (err) {
+      console.error("Error al parsear JSON ciudades por estado:", err);
+      console.error(
+        "Respuesta cruda (primeros 2000 chars):",
+        texto.slice(0, 2000),
+      );
       return [];
     }
-    const resultado = JSON.parse(texto);
-    return Array.isArray(resultado.data) ? resultado.data : [];
   } catch (error) {
     console.error(
       "Error al cargar ciudades por estado:",
