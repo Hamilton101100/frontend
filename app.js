@@ -338,6 +338,7 @@ function cerrarModalDocumento() {
 }
 
 async function abrirModalPersona(persona = null) {
+  await cargarSelectTiposDocumento();
   EstadoApp.idPersonaEditando = persona ? persona.id : null;
 
   document.getElementById("persona-nombre").value = persona ? persona.name : "";
@@ -629,7 +630,15 @@ function configurarFormularioPersonas() {
           body: JSON.stringify(datos),
         });
         if (!respuesta.ok) {
-          throw new Error(`Error HTTP: ${respuesta.status}`);
+          const textoError = await respuesta.text();
+          let mensaje = `Error HTTP: ${respuesta.status}`;
+          try {
+            const errorJson = JSON.parse(textoError);
+            mensaje = errorJson.message || mensaje;
+          } catch (e) {
+            if (textoError) mensaje = textoError;
+          }
+          throw new Error(mensaje);
         }
         const texto = await respuesta.text();
         const resultado = JSON.parse(texto);
@@ -646,7 +655,7 @@ function configurarFormularioPersonas() {
           mostrarNotificacion("Hubo un problema al guardar.", "error");
         }
       } catch (error) {
-        mostrarNotificacion("Error de conexión.", "error");
+        mostrarNotificacion(error.message || "Error de conexión.", "error");
       }
     });
 }
@@ -658,6 +667,12 @@ async function cargarTablaPersonas() {
   try {
     if (EstadoApp.tiposDocumento.length === 0) {
       await cargarSelectTiposDocumento();
+    }
+    if (EstadoApp.todosLosPaises.length === 0) {
+      await precargarPaises();
+    }
+    if (EstadoApp.todosLosEstados.length === 0) {
+      await precargarEstados();
     }
 
     const respuesta = await fetchConAutenticacion(
