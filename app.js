@@ -774,31 +774,32 @@ async function cargarTablaPersonas() {
       return;
     }
 
-    // Obtener nombres de ciudades por id para evitar depender de la precarga global
-// Obtener nombres de ciudades agrupando por state_id (1 petición por estado, no por persona)
-const uniqueStateIds = [
-  ...new Set(personas.map((p) => p.state_id).filter(Boolean)),
-];
-const cityNameMap = {};
-await Promise.all(
-  uniqueStateIds.map(async (sid) => {
-    try {
-      const r = await fetchConAutenticacion(
-        `${URL_BASE_API}/?PATH_INFO=cities/state/${sid}`,
-      );
-      if (!r.ok) return;
-      const t = await r.text();
-      const res = JSON.parse(t);
-      if (Array.isArray(res.data)) {
-        res.data.forEach((ciudad) => {
-          cityNameMap[ciudad.id_city] = ciudad.city || "";
-        });
-      }
-    } catch (e) {
-      // ignorar fallo por estado
-    }
-  }),
-);
+    // ── Mapa de ciudades ──────────────────────────────────────────
+    const uniqueStateIds = [
+      ...new Set(personas.map((p) => p.state_id).filter(Boolean)),
+    ];
+    const cityNameMap = {};
+    await Promise.all(
+      uniqueStateIds.map(async (sid) => {
+        try {
+          const r = await fetchConAutenticacion(
+            `${URL_BASE_API}/?PATH_INFO=cities/state/${sid}`,
+          );
+          if (!r.ok) return;
+          const t = await r.text();
+          const trimmed = t.trim();
+          if (!trimmed.startsWith("{")) return;
+          const res = JSON.parse(trimmed);
+          if (Array.isArray(res.data)) {
+            res.data.forEach((c) => {
+              cityNameMap[Number(c.id_city)] = c.city || "";
+            });
+          }
+        } catch (e) {
+          console.warn("Error cargando ciudades estado", sid, e);
+        }
+      }),
+    );
 
     personas.forEach((persona, indice) => {
       const tipoDoc = EstadoApp.tiposDocumento.find(
@@ -818,7 +819,7 @@ await Promise.all(
       );
       const nombreEstado = estado ? estado.state : "—";
 
-      const nombreCiudad = cityNameMap[persona.city_id] || "—";
+      const nombreCiudad = cityNameMap[Number(persona.city_id)] || "—";
 
       const fila = document.createElement("tr");
       // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
