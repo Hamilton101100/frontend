@@ -566,6 +566,11 @@ async function cargarTablaDocumentos() {
     }
     const resultado = JSON.parse(texto);
 
+    // ← LÍNEA QUE FALTABA
+    const documentos = Array.isArray(resultado.data)
+      ? resultado.data.filter((d) => !d.dateDelete)
+      : [];
+
     EstadoApp.tiposDocumento = documentos;
     cuerpoTabla.innerHTML = "";
 
@@ -577,7 +582,6 @@ async function cargarTablaDocumentos() {
 
     documentos.forEach((doc, indice) => {
       const fila = document.createElement("tr");
-      // BOTONES ACTUALIZADOS A CLASES NATIVAS DE BOOTSTRAP (`btn-outline-...` y `me-1` para separarlos)
       fila.innerHTML = `
         <td>${indice + 1}</td>
         <td>${doc.nombre_largo || ""}</td>
