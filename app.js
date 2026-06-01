@@ -225,40 +225,28 @@ function alCambiarPais() {
   selectEstado.disabled = estadosFiltrados.length === 0;
 }
 
-async function alCambiarEstado() {
-  const estadoId     = document.getElementById("persona-estado").value;
+function alCambiarEstado() {
+  const estadoId = document.getElementById("persona-estado").value;
   const selectCiudad = document.getElementById("persona-ciudad");
 
-  selectCiudad.innerHTML = '<option value="">Cargando ciudades...</option>';
-  selectCiudad.disabled  = true;
+  selectCiudad.innerHTML =
+    '<option value="">-- Seleccione una ciudad --</option>';
+  selectCiudad.disabled = true;
 
-  if (!estadoId) {
-    selectCiudad.innerHTML = '<option value="">-- Seleccione primero un estado --</option>';
-    return;
-  }
+  if (!estadoId) return;
 
-  try {
-    // Trae solo las ciudades del estado seleccionado
-    const respuesta = await fetchConAutenticacion(
-      `${URL_BASE_API}/?PATH_INFO=cities&state_id=${estadoId}`
-    );
-    const resultado = await respuesta.json();
-    const ciudades  = Array.isArray(resultado.data) ? resultado.data : [];
+  const ciudadesFiltradas = EstadoApp.todasLasCiudades.filter(
+    (c) => String(c.state_id) === String(estadoId),
+  );
 
-    selectCiudad.innerHTML = '<option value="">-- Seleccione una ciudad --</option>';
-    ciudades.forEach(ciudad => {
-      const opcion       = document.createElement("option");
-      opcion.value       = ciudad.id_city;
-      opcion.textContent = ciudad.city;
-      selectCiudad.appendChild(opcion);
-    });
+  ciudadesFiltradas.forEach((ciudad) => {
+    const opcion = document.createElement("option");
+    opcion.value = ciudad.id_city;
+    opcion.textContent = ciudad.city;
+    selectCiudad.appendChild(opcion);
+  });
 
-    selectCiudad.disabled = ciudades.length === 0;
-
-  } catch (error) {
-    console.error("Error al cargar ciudades:", error);
-    selectCiudad.innerHTML = '<option value="">Error al cargar ciudades</option>';
-  }
+  selectCiudad.disabled = ciudadesFiltradas.length === 0;
 }
 
 /* Modal de documentos */
