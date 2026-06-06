@@ -246,22 +246,30 @@ function alCambiarPais() {
   const selectEstado = document.getElementById("persona-estado");
   const selectCiudad = document.getElementById("persona-ciudad");
 
+  // Limpiar estados y ciudades
   selectEstado.innerHTML =
     '<option value="">-- Seleccione un estado --</option>';
   selectCiudad.innerHTML =
     '<option value="">-- Seleccione primero un estado --</option>';
-  selectEstado.disabled = true;
-  selectCiudad.disabled = true;
 
-  // Actualizar Select2 - limpiar y deshabilitar
-  $("#persona-estado").val("").trigger("change").prop("disabled", true);
-  $("#persona-ciudad").val("").trigger("change").prop("disabled", true);
+  // Limpiar Select2
+  $("#persona-estado").val("").trigger("change");
+  $("#persona-ciudad").val("").trigger("change");
 
-  if (!paisId) return;
+  if (!paisId) {
+    // Deshabilitar ambos
+    selectEstado.disabled = true;
+    selectCiudad.disabled = true;
+    $("#persona-estado").prop("disabled", true);
+    $("#persona-ciudad").prop("disabled", true);
+    return;
+  }
 
+  // Filtrar y agregar estados
   const estadosFiltrados = EstadoApp.todosLosEstados.filter(
     (e) => String(e.country_id) === String(paisId),
   );
+
   estadosFiltrados.forEach((estado) => {
     const opcion = document.createElement("option");
     opcion.value = estado.id_state;
@@ -269,25 +277,37 @@ function alCambiarPais() {
     selectEstado.appendChild(opcion);
   });
 
-  const estaHabilitado = estadosFiltrados.length > 0;
-  selectEstado.disabled = !estaHabilitado;
-  $("#persona-estado").trigger("change").prop("disabled", !estaHabilitado);
+  // Habilitar o deshabilitar según tengamos estados
+  const tieneEstados = estadosFiltrados.length > 0;
+  selectEstado.disabled = !tieneEstados;
+  $("#persona-estado").prop("disabled", !tieneEstados).trigger("change");
+
+  // Siempre deshabilitar ciudades hasta que se seleccione un estado
+  selectCiudad.disabled = true;
+  $("#persona-ciudad").prop("disabled", true).trigger("change");
 }
 
 async function alCambiarEstado() {
   const estadoId = document.getElementById("persona-estado").value;
   const selectCiudad = document.getElementById("persona-ciudad");
 
+  // Limpiar ciudades
   selectCiudad.innerHTML =
     '<option value="">-- Seleccione una ciudad --</option>';
-  selectCiudad.disabled = true;
 
-  // Actualizar Select2 - limpiar y deshabilitar
-  $("#persona-ciudad").val("").trigger("change").prop("disabled", true);
+  // Limpiar Select2
+  $("#persona-ciudad").val("").trigger("change");
 
-  if (!estadoId) return;
+  if (!estadoId) {
+    // Deshabilitar ciudades
+    selectCiudad.disabled = true;
+    $("#persona-ciudad").prop("disabled", true).trigger("change");
+    return;
+  }
 
+  // Cargar ciudades del estado
   const ciudadesFiltradas = await cargarCiudadesPorEstado(estadoId);
+
   ciudadesFiltradas.forEach((ciudad) => {
     const opcion = document.createElement("option");
     opcion.value = ciudad.id_city;
@@ -295,9 +315,10 @@ async function alCambiarEstado() {
     selectCiudad.appendChild(opcion);
   });
 
-  const estaHabilitado = ciudadesFiltradas.length > 0;
-  selectCiudad.disabled = !estaHabilitado;
-  $("#persona-ciudad").trigger("change").prop("disabled", !estaHabilitado);
+  // Habilitar o deshabilitar según tengamos ciudades
+  const tieneCiudades = ciudadesFiltradas.length > 0;
+  selectCiudad.disabled = !tieneCiudades;
+  $("#persona-ciudad").prop("disabled", !tieneCiudades).trigger("change");
 }
 
 /* Modal Documento */
@@ -342,29 +363,40 @@ async function abrirModalPersona(persona = null) {
     .val(persona ? persona.tipo_documento_id || "" : "")
     .trigger("change");
 
+  // Llenar países
   llenarSelectPaises();
 
   if (persona && persona.country_id) {
+    // Seleccionar país (esto dispara alCambiarPais)
     $("#persona-pais").val(persona.country_id).trigger("change");
-    await new Promise((r) => setTimeout(r, 100)); // Pequeña espera para que se actualicen los estados
+
+    // Esperar a que se carguen los estados
+    await new Promise((r) => setTimeout(r, 150));
 
     if (persona.state_id) {
+      // Seleccionar estado (esto dispara alCambiarEstado)
       $("#persona-estado").val(persona.state_id).trigger("change");
-      await new Promise((r) => setTimeout(r, 100)); // Pequeña espera para que se actualicen las ciudades
+
+      // Esperar a que se carguen las ciudades
+      await new Promise((r) => setTimeout(r, 150));
 
       if (persona.city_id) {
+        // Seleccionar ciudad
         $("#persona-ciudad").val(persona.city_id).trigger("change");
       }
     }
   } else {
+    // No hay persona: deshabilitar estados y ciudades
     document.getElementById("persona-estado").innerHTML =
       '<option value="">-- Seleccione primero un país --</option>';
     document.getElementById("persona-estado").disabled = true;
+
     document.getElementById("persona-ciudad").innerHTML =
       '<option value="">-- Seleccione primero un estado --</option>';
     document.getElementById("persona-ciudad").disabled = true;
-    $("#persona-estado").trigger("change").prop("disabled", true);
-    $("#persona-ciudad").trigger("change").prop("disabled", true);
+
+    $("#persona-estado").val("").prop("disabled", true).trigger("change");
+    $("#persona-ciudad").val("").prop("disabled", true).trigger("change");
   }
 
   document.getElementById("titulo-modal-persona").textContent = persona
@@ -561,11 +593,14 @@ async function eliminarDocumento(id) {
 
 /* CRUD: Personas */
 function configurarFormularioPersonas() {
-  const selectPais = document.getElementById("persona-pais");
-  const selectEstado = document.getElementById("persona-estado");
+  // Usar eventos de Select2 en lugar de eventos nativos
+  $("#persona-pais").on("select2:select select2:clear", function () {
+    alCambiarPais();
+  });
 
-  if (selectPais) selectPais.addEventListener("change", alCambiarPais);
-  if (selectEstado) selectEstado.addEventListener("change", alCambiarEstado);
+  $("#persona-estado").on("select2:select select2:clear", function () {
+    alCambiarEstado();
+  });
 
   document
     .getElementById("form-persona")
