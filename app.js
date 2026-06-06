@@ -29,6 +29,41 @@ async function fetchConAutenticacion(url, opciones = {}) {
   return await fetch(url, configuracion);
 }
 
+/* Inicialización de Select2 */
+function inicializarSelect2() {
+  $("#persona-tipo-doc").select2({
+    theme: "bootstrap-5",
+    width: "100%",
+    allowClear: true,
+    placeholder: "-- Seleccione --",
+    dropdownParent: $("#modal-persona"),
+  });
+
+  $("#persona-pais").select2({
+    theme: "bootstrap-5",
+    width: "100%",
+    allowClear: true,
+    placeholder: "-- Seleccione un país --",
+    dropdownParent: $("#modal-persona"),
+  });
+
+  $("#persona-estado").select2({
+    theme: "bootstrap-5",
+    width: "100%",
+    allowClear: true,
+    placeholder: "-- Seleccione un estado --",
+    dropdownParent: $("#modal-persona"),
+  });
+
+  $("#persona-ciudad").select2({
+    theme: "bootstrap-5",
+    width: "100%",
+    allowClear: true,
+    placeholder: "-- Seleccione una ciudad --",
+    dropdownParent: $("#modal-persona"),
+  });
+}
+
 /* Inicialización*/
 document.addEventListener("DOMContentLoaded", () => {
   bsModalDocumento = new bootstrap.Modal(
@@ -41,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("modal-confirmar"),
   );
 
+  inicializarSelect2();
   configurarNavegacion();
   configurarFormularioLogin();
   configurarFormularioDocumentos();
@@ -201,6 +237,8 @@ function llenarSelectPaises() {
     opcion.textContent = pais.country_name;
     select.appendChild(opcion);
   });
+  // Actualizar Select2 después de cambiar las opciones
+  $("#persona-pais").trigger("change");
 }
 
 function alCambiarPais() {
@@ -215,6 +253,10 @@ function alCambiarPais() {
   selectEstado.disabled = true;
   selectCiudad.disabled = true;
 
+  // Actualizar Select2 - limpiar y deshabilitar
+  $("#persona-estado").val("").trigger("change").prop("disabled", true);
+  $("#persona-ciudad").val("").trigger("change").prop("disabled", true);
+
   if (!paisId) return;
 
   const estadosFiltrados = EstadoApp.todosLosEstados.filter(
@@ -226,7 +268,10 @@ function alCambiarPais() {
     opcion.textContent = estado.state;
     selectEstado.appendChild(opcion);
   });
-  selectEstado.disabled = estadosFiltrados.length === 0;
+
+  const estaHabilitado = estadosFiltrados.length > 0;
+  selectEstado.disabled = !estaHabilitado;
+  $("#persona-estado").trigger("change").prop("disabled", !estaHabilitado);
 }
 
 async function alCambiarEstado() {
@@ -237,6 +282,9 @@ async function alCambiarEstado() {
     '<option value="">-- Seleccione una ciudad --</option>';
   selectCiudad.disabled = true;
 
+  // Actualizar Select2 - limpiar y deshabilitar
+  $("#persona-ciudad").val("").trigger("change").prop("disabled", true);
+
   if (!estadoId) return;
 
   const ciudadesFiltradas = await cargarCiudadesPorEstado(estadoId);
@@ -246,7 +294,10 @@ async function alCambiarEstado() {
     opcion.textContent = ciudad.city;
     selectCiudad.appendChild(opcion);
   });
-  selectCiudad.disabled = ciudadesFiltradas.length === 0;
+
+  const estaHabilitado = ciudadesFiltradas.length > 0;
+  selectCiudad.disabled = !estaHabilitado;
+  $("#persona-ciudad").trigger("change").prop("disabled", !estaHabilitado);
 }
 
 /* Modal Documento */
@@ -285,20 +336,24 @@ async function abrirModalPersona(persona = null) {
   document.getElementById("persona-num-doc").value = persona
     ? persona.numero_documento || ""
     : "";
-  document.getElementById("persona-tipo-doc").value = persona
-    ? persona.tipo_documento_id || ""
-    : "";
+
+  // Actualizar Select2 de tipo de documento
+  $("#persona-tipo-doc")
+    .val(persona ? persona.tipo_documento_id || "" : "")
+    .trigger("change");
 
   llenarSelectPaises();
 
   if (persona && persona.country_id) {
-    document.getElementById("persona-pais").value = persona.country_id;
-    alCambiarPais();
+    $("#persona-pais").val(persona.country_id).trigger("change");
+    await new Promise((r) => setTimeout(r, 100)); // Pequeña espera para que se actualicen los estados
+
     if (persona.state_id) {
-      document.getElementById("persona-estado").value = persona.state_id;
-      await alCambiarEstado();
+      $("#persona-estado").val(persona.state_id).trigger("change");
+      await new Promise((r) => setTimeout(r, 100)); // Pequeña espera para que se actualicen las ciudades
+
       if (persona.city_id) {
-        document.getElementById("persona-ciudad").value = persona.city_id;
+        $("#persona-ciudad").val(persona.city_id).trigger("change");
       }
     }
   } else {
@@ -308,6 +363,8 @@ async function abrirModalPersona(persona = null) {
     document.getElementById("persona-ciudad").innerHTML =
       '<option value="">-- Seleccione primero un estado --</option>';
     document.getElementById("persona-ciudad").disabled = true;
+    $("#persona-estado").trigger("change").prop("disabled", true);
+    $("#persona-ciudad").trigger("change").prop("disabled", true);
   }
 
   document.getElementById("titulo-modal-persona").textContent = persona
@@ -322,6 +379,11 @@ function cerrarModalPersona() {
   EstadoApp.idPersonaEditando = null;
   document.getElementById("persona-estado").disabled = true;
   document.getElementById("persona-ciudad").disabled = true;
+  // Limpiar Select2
+  $("#persona-tipo-doc").val("").trigger("change");
+  $("#persona-pais").val("").trigger("change");
+  $("#persona-estado").val("").trigger("change").prop("disabled", true);
+  $("#persona-ciudad").val("").trigger("change").prop("disabled", true);
 }
 
 /* Modal Confirmación */
@@ -466,6 +528,8 @@ async function cargarSelectTiposDocumento() {
       opcion.textContent = `${doc.nombre_corto} — ${doc.nombre_largo}`;
       selectDoc.appendChild(opcion);
     });
+    // Actualizar Select2 después de cambiar las opciones
+    $("#persona-tipo-doc").trigger("change");
   } catch (error) {
     console.error("Error al cargar tipos:", error);
   }
