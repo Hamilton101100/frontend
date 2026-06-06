@@ -402,6 +402,9 @@ function abrirModalProfesion(profesion = null) {
   document.getElementById("profesion-nombre").value = profesion
     ? profesion.nombre || ""
     : "";
+    document.getElementById("profesion-area").value = profesion
+  ? profesion.area || ""
+  : "";
   document.getElementById("titulo-modal-profesion").textContent = profesion
     ? "Editar Profesión"
     : "Nueva Profesión";
@@ -647,6 +650,9 @@ function configurarFormularioProfesiones() {
         return;
       }
 
+      const area = document.getElementById("profesion-area").value.trim();
+
+
       const esEdicion = EstadoApp.idProfesionEditando !== null;
       const url = esEdicion
         ? `${URL_BASE_API}/?PATH_INFO=profesiones/${EstadoApp.idProfesionEditando}`
@@ -656,9 +662,7 @@ function configurarFormularioProfesiones() {
       try {
         const respuesta = await fetchConAutenticacion(url, {
           method: metodo,
-          body: JSON.stringify({
-            nombre: nombre,
-          }),
+          body: JSON.stringify({ nombre: nombre, area: area })
         });
         if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
         const resultado = await respuesta.json();
@@ -706,6 +710,7 @@ async function cargarTablaProfesiones() {
       fila.innerHTML = `
         <td>${profesion.id != null ? profesion.id : indice + 1}</td>
         <td>${profesion.nombre || ""}</td>
+        <td>${profesion.area || "—"}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalProfesion(${JSON.stringify(profesion)})'>
             <i class="bi bi-pencil-square me-1"></i>Editar
