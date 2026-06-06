@@ -357,6 +357,9 @@ async function abrirModalPersona(persona = null) {
   document.getElementById("persona-num-doc").value = persona
     ? persona.numero_documento || ""
     : "";
+  document.getElementById("persona-email").value = persona
+    ? persona.email || ""
+    : "";
 
   // Actualizar Select2 de tipo de documento
   $("#persona-tipo-doc")
@@ -615,6 +618,7 @@ function configurarFormularioPersonas() {
       const paisId = document.getElementById("persona-pais").value;
       const estadoId = document.getElementById("persona-estado").value;
       const ciudadId = document.getElementById("persona-ciudad").value;
+      const email = document.getElementById("persona-email").value.trim();
 
       if (!nombre || !apellido) {
         mostrarNotificacion("Nombre y apellido son obligatorios.", "error");
@@ -633,7 +637,7 @@ function configurarFormularioPersonas() {
         phone: telefono || "0",
         tipo_documento_id: tipoDocId ? parseInt(tipoDocId) : null,
         numero_documento: numDoc || null,
-        email: document.getElementById("persona-email").value.trim() || null,
+        email: email || null,
         country_id: paisId ? parseInt(paisId) : null,
         state_id: estadoId ? parseInt(estadoId) : null,
         city_id: ciudadId ? parseInt(ciudadId) : null,
