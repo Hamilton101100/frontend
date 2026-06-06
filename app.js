@@ -402,9 +402,6 @@ function abrirModalProfesion(profesion = null) {
   document.getElementById("profesion-nombre").value = profesion
     ? profesion.nombre || ""
     : "";
-  document.getElementById("profesion-descripcion").value = profesion
-    ? profesion.descripcion || ""
-    : "";
   document.getElementById("titulo-modal-profesion").textContent = profesion
     ? "Editar Profesión"
     : "Nueva Profesión";
@@ -420,14 +417,8 @@ function cerrarModalProfesion() {
 /* Modal Mascota */
 function abrirModalMascota(mascota = null) {
   EstadoApp.idMascotaEditando = mascota ? mascota.id : null;
-  document.getElementById("mascota-nombre").value = mascota
-    ? mascota.nombre || ""
-    : "";
   document.getElementById("mascota-especie").value = mascota
     ? mascota.especie || ""
-    : "";
-  document.getElementById("mascota-edad").value = mascota
-    ? mascota.edad || ""
     : "";
   document.getElementById("mascota-raza").value = mascota
     ? mascota.raza || ""
@@ -651,10 +642,6 @@ function configurarFormularioProfesiones() {
       const nombre = document
         .getElementById("profesion-nombre")
         .value.trim();
-      const descripcion = document
-        .getElementById("profesion-descripcion")
-        .value.trim();
-
       if (!nombre) {
         mostrarNotificacion("Por favor ingresa el nombre de la profesión.", "error");
         return;
@@ -671,7 +658,6 @@ function configurarFormularioProfesiones() {
           method: metodo,
           body: JSON.stringify({
             nombre: nombre,
-            descripcion: descripcion || null,
           }),
         });
         if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
@@ -694,7 +680,7 @@ function configurarFormularioProfesiones() {
 
 async function cargarTablaProfesiones() {
   const cuerpoTabla = document.getElementById("tabla-profesiones-cuerpo");
-  cuerpoTabla.innerHTML = "<tr><td colspan='4'>Cargando...</td></tr>";
+  cuerpoTabla.innerHTML = "<tr><td colspan='3'>Cargando...</td></tr>";
 
   try {
     const respuesta = await fetchConAutenticacion(
@@ -711,16 +697,15 @@ async function cargarTablaProfesiones() {
 
     if (profesiones.length === 0) {
       cuerpoTabla.innerHTML =
-        "<tr><td colspan='4'>No hay profesiones registradas.</td></tr>";
+        "<tr><td colspan='3'>No hay profesiones registradas.</td></tr>";
       return;
     }
 
     profesiones.forEach((profesion, indice) => {
       const fila = document.createElement("tr");
       fila.innerHTML = `
-        <td>${indice + 1}</td>
+        <td>${profesion.id != null ? profesion.id : indice + 1}</td>
         <td>${profesion.nombre || ""}</td>
-        <td>${profesion.descripcion || "—"}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalProfesion(${JSON.stringify(profesion)})'>
             <i class="bi bi-pencil-square me-1"></i>Editar
@@ -767,21 +752,15 @@ function configurarFormularioMascotas() {
     .addEventListener("submit", async (evento) => {
       evento.preventDefault();
 
-      const nombre = document
-        .getElementById("mascota-nombre")
-        .value.trim();
       const especie = document
         .getElementById("mascota-especie")
-        .value.trim();
-      const edad = document
-        .getElementById("mascota-edad")
         .value.trim();
       const raza = document
         .getElementById("mascota-raza")
         .value.trim();
 
-      if (!nombre) {
-        mostrarNotificacion("Por favor ingresa el nombre de la mascota.", "error");
+      if (!especie || !raza) {
+        mostrarNotificacion("Por favor ingresa tipo y raza.", "error");
         return;
       }
 
@@ -795,9 +774,7 @@ function configurarFormularioMascotas() {
         const respuesta = await fetchConAutenticacion(url, {
           method: metodo,
           body: JSON.stringify({
-            nombre: nombre,
             especie: especie || null,
-            edad: edad ? parseInt(edad, 10) : null,
             raza: raza || null,
           }),
         });
@@ -821,8 +798,7 @@ function configurarFormularioMascotas() {
 
 async function cargarTablaMascotas() {
   const cuerpoTabla = document.getElementById("tabla-mascotas-cuerpo");
-  cuerpoTabla.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
-
+  cuerpoTabla.innerHTML = "<tr><td colspan='4'>Cargando...</td></tr>";
   try {
     const respuesta = await fetchConAutenticacion(
       `${URL_BASE_API}/?PATH_INFO=mascotas`,
@@ -838,7 +814,7 @@ async function cargarTablaMascotas() {
 
     if (mascotas.length === 0) {
       cuerpoTabla.innerHTML =
-        "<tr><td colspan='6'>No hay mascotas registradas.</td></tr>";
+        "<tr><td colspan='4'>No hay mascotas registradas.</td></tr>";
       return;
     }
 
@@ -846,9 +822,7 @@ async function cargarTablaMascotas() {
       const fila = document.createElement("tr");
       fila.innerHTML = `
         <td>${indice + 1}</td>
-        <td>${mascota.nombre || ""}</td>
         <td>${mascota.especie || "—"}</td>
-        <td>${mascota.edad != null ? mascota.edad : "—"}</td>
         <td>${mascota.raza || "—"}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalMascota(${JSON.stringify(mascota)})'>
@@ -862,7 +836,7 @@ async function cargarTablaMascotas() {
       cuerpoTabla.appendChild(fila);
     });
   } catch (error) {
-    cuerpoTabla.innerHTML = "<tr><td colspan='6'>Error al conectar.</td></tr>";
+    cuerpoTabla.innerHTML = "<tr><td colspan='4'>Error al conectar.</td></tr>";
   }
 }
 

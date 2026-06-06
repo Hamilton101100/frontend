@@ -224,15 +224,14 @@
               >
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>ID</th>
                     <th>Nombre</th>
-                    <th>Descripción</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-profesiones-cuerpo">
                   <tr>
-                    <td colspan="4">Cargando...</td>
+                    <td colspan="3">Cargando...</td>
                   </tr>
                 </tbody>
               </table>
@@ -261,16 +260,14 @@
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Nombre</th>
-                    <th>Especie</th>
-                    <th>Edad</th>
+                    <th>Tipo</th>
                     <th>Raza</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-mascotas-cuerpo">
                   <tr>
-                    <td colspan="6">Cargando...</td>
+                    <td colspan="4">Cargando...</td>
                   </tr>
                 </tbody>
               </table>
@@ -508,17 +505,6 @@
                   class="form-control"
                 />
               </div>
-              <div class="mb-3">
-                <label for="profesion-descripcion" class="form-label"
-                  >Descripción:</label
-                >
-                <textarea
-                  id="profesion-descripcion"
-                  rows="3"
-                  class="form-control"
-                  placeholder="Ej: Especialista en sistemas"
-                ></textarea>
-              </div>
             </div>
             <div class="modal-footer">
               <button
@@ -559,44 +545,24 @@
             <div class="modal-body">
               <input type="hidden" id="mascota-id" />
               <div class="mb-3">
-                <label for="mascota-nombre" class="form-label">Nombre: *</label>
-                <input
-                  type="text"
-                  id="mascota-nombre"
-                  required
-                  placeholder="Ej: Max"
-                  class="form-control"
-                />
-              </div>
-              <div class="mb-3">
-                <label for="mascota-especie" class="form-label">Especie:</label>
+                <label for="mascota-especie" class="form-label">Tipo: *</label>
                 <input
                   type="text"
                   id="mascota-especie"
+                  required
                   placeholder="Ej: Perro"
                   class="form-control"
                 />
               </div>
-              <div class="fila-doble">
-                <div class="mb-3">
-                  <label for="mascota-edad" class="form-label">Edad:</label>
-                  <input
-                    type="number"
-                    id="mascota-edad"
-                    min="0"
-                    placeholder="Ej: 3"
-                    class="form-control"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="mascota-raza" class="form-label">Raza:</label>
-                  <input
-                    type="text"
-                    id="mascota-raza"
-                    placeholder="Ej: Labrador"
-                    class="form-control"
-                  />
-                </div>
+              <div class="mb-3">
+                <label for="mascota-raza" class="form-label">Raza: *</label>
+                <input
+                  type="text"
+                  id="mascota-raza"
+                  required
+                  placeholder="Ej: Labrador"
+                  class="form-control"
+                />
               </div>
             </div>
             <div class="modal-footer">
