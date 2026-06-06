@@ -357,9 +357,6 @@ async function abrirModalPersona(persona = null) {
   document.getElementById("persona-num-doc").value = persona
     ? persona.numero_documento || ""
     : "";
-  document.getElementById("persona-email").value = persona
-    ? persona.email || ""
-    : "";
 
   // Actualizar Select2 de tipo de documento
   $("#persona-tipo-doc")
@@ -618,7 +615,6 @@ function configurarFormularioPersonas() {
       const paisId = document.getElementById("persona-pais").value;
       const estadoId = document.getElementById("persona-estado").value;
       const ciudadId = document.getElementById("persona-ciudad").value;
-      const email = document.getElementById("persona-email").value.trim();
 
       if (!nombre || !apellido) {
         mostrarNotificacion("Nombre y apellido son obligatorios.", "error");
@@ -637,7 +633,6 @@ function configurarFormularioPersonas() {
         phone: telefono || "0",
         tipo_documento_id: tipoDocId ? parseInt(tipoDocId) : null,
         numero_documento: numDoc || null,
-        email: email || null,
         country_id: paisId ? parseInt(paisId) : null,
         state_id: estadoId ? parseInt(estadoId) : null,
         city_id: ciudadId ? parseInt(ciudadId) : null,
@@ -676,7 +671,7 @@ function configurarFormularioPersonas() {
 
 async function cargarTablaPersonas() {
   const cuerpoTabla = document.getElementById("tabla-personas-cuerpo");
-  cuerpoTabla.innerHTML = "<tr><td colspan='10'>Cargando personas...</td></tr>";
+  cuerpoTabla.innerHTML = "<tr><td colspan='9'>Cargando personas...</td></tr>";
 
   try {
     if (EstadoApp.tiposDocumento.length === 0)
@@ -697,7 +692,7 @@ async function cargarTablaPersonas() {
 
     if (personas.length === 0) {
       cuerpoTabla.innerHTML =
-        "<tr><td colspan='10'>No hay personas registradas.</td></tr>";
+        "<tr><td colspan='9'>No hay personas registradas.</td></tr>";
       return;
     }
 
@@ -750,7 +745,6 @@ async function cargarTablaPersonas() {
         <td>${pais ? pais.country_name : "—"}</td>
         <td>${estado ? estado.state : "—"}</td>
         <td>${nombreCiudad}</td>
-        <td>${persona.email || "—"}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalPersona(${JSON.stringify(persona)})'>
             <i class="bi bi-pencil-square me-1"></i>Editar
@@ -763,7 +757,7 @@ async function cargarTablaPersonas() {
       cuerpoTabla.appendChild(fila);
     });
   } catch (error) {
-    cuerpoTabla.innerHTML = "<tr><td colspan='10'>Error al conectar.</td></tr>";
+    cuerpoTabla.innerHTML = "<tr><td colspan='9'>Error al conectar.</td></tr>";
   }
 }
 
