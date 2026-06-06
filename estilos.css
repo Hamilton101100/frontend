@@ -159,3 +159,12 @@ body {
   color: #cffafe !important;
   background-color: rgba(14, 165, 233, 0.18) !important;
 }
+
+/* ── Columna de acciones ── */
+.table td:last-child,
+.table th:last-child {
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 1%;
+}
