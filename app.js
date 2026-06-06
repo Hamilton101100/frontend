@@ -6,13 +6,19 @@ const EstadoApp = {
   claveAPI: null,
   idPersonaEditando: null,
   idDocumentoEditando: null,
+  idProfesionEditando: null,
+  idMascotaEditando: null,
   tiposDocumento: [],
+  profesiones: [],
+  mascotas: [],
   todosLosPaises: [],
   todosLosEstados: [],
 };
 
 let bsModalDocumento;
 let bsModalPersona;
+let bsModalProfesion;
+let bsModalMascota;
 let bsModalConfirmar;
 
 /* Helper: peticiones autenticadas */
@@ -72,6 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
   bsModalPersona = new bootstrap.Modal(
     document.getElementById("modal-persona"),
   );
+  bsModalProfesion = new bootstrap.Modal(
+    document.getElementById("modal-profesion"),
+  );
+  bsModalMascota = new bootstrap.Modal(
+    document.getElementById("modal-mascota"),
+  );
   bsModalConfirmar = new bootstrap.Modal(
     document.getElementById("modal-confirmar"),
   );
@@ -81,6 +93,8 @@ document.addEventListener("DOMContentLoaded", () => {
   configurarFormularioLogin();
   configurarFormularioDocumentos();
   configurarFormularioPersonas();
+  configurarFormularioProfesiones();
+  configurarFormularioMascotas();
   configurarModalConfirmacion();
 });
 
@@ -88,8 +102,12 @@ const seccionLogin = document.getElementById("seccion-login");
 const panelPrincipal = document.getElementById("panel-principal");
 const crudPersonas = document.getElementById("crud-personas");
 const crudDocumentos = document.getElementById("crud-documentos");
+const crudProfesiones = document.getElementById("crud-profesiones");
+const crudMascotas = document.getElementById("crud-mascotas");
 const btnNavPersonas = document.getElementById("btn-nav-personas");
 const btnNavDocumentos = document.getElementById("btn-nav-documentos");
+const btnNavProfesiones = document.getElementById("btn-nav-profesiones");
+const btnNavMascotas = document.getElementById("btn-nav-mascotas");
 const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 
 /*Navegación*/
@@ -97,25 +115,61 @@ function configurarNavegacion() {
   btnNavPersonas.addEventListener("click", () => {
     btnNavPersonas.classList.add("active");
     btnNavDocumentos.classList.remove("active");
+    btnNavProfesiones.classList.remove("active");
+    btnNavMascotas.classList.remove("active");
     crudPersonas.classList.remove("oculto");
     crudDocumentos.classList.add("oculto");
+    crudProfesiones.classList.add("oculto");
+    crudMascotas.classList.add("oculto");
     cargarTablaPersonas();
   });
 
   btnNavDocumentos.addEventListener("click", () => {
     btnNavDocumentos.classList.add("active");
     btnNavPersonas.classList.remove("active");
+    btnNavProfesiones.classList.remove("active");
+    btnNavMascotas.classList.remove("active");
     crudDocumentos.classList.remove("oculto");
     crudPersonas.classList.add("oculto");
+    crudProfesiones.classList.add("oculto");
+    crudMascotas.classList.add("oculto");
     cargarTablaDocumentos();
+  });
+
+  btnNavProfesiones.addEventListener("click", () => {
+    btnNavProfesiones.classList.add("active");
+    btnNavPersonas.classList.remove("active");
+    btnNavDocumentos.classList.remove("active");
+    btnNavMascotas.classList.remove("active");
+    crudProfesiones.classList.remove("oculto");
+    crudPersonas.classList.add("oculto");
+    crudDocumentos.classList.add("oculto");
+    crudMascotas.classList.add("oculto");
+    cargarTablaProfesiones();
+  });
+
+  btnNavMascotas.addEventListener("click", () => {
+    btnNavMascotas.classList.add("active");
+    btnNavPersonas.classList.remove("active");
+    btnNavDocumentos.classList.remove("active");
+    btnNavProfesiones.classList.remove("active");
+    crudMascotas.classList.remove("oculto");
+    crudPersonas.classList.add("oculto");
+    crudDocumentos.classList.add("oculto");
+    crudProfesiones.classList.add("oculto");
+    cargarTablaMascotas();
   });
 
   btnCerrarSesion.addEventListener("click", () => {
     EstadoApp.usuarioAutenticado = false;
     EstadoApp.claveAPI = null;
     EstadoApp.tiposDocumento = [];
+    EstadoApp.profesiones = [];
+    EstadoApp.mascotas = [];
     EstadoApp.idPersonaEditando = null;
     EstadoApp.idDocumentoEditando = null;
+    EstadoApp.idProfesionEditando = null;
+    EstadoApp.idMascotaEditando = null;
     EstadoApp.todosLosPaises = [];
     EstadoApp.todosLosEstados = [];
     panelPrincipal.classList.add("oculto");
@@ -342,6 +396,54 @@ function cerrarModalDocumento() {
   EstadoApp.idDocumentoEditando = null;
 }
 
+/* Modal Profesión */
+function abrirModalProfesion(profesion = null) {
+  EstadoApp.idProfesionEditando = profesion ? profesion.id : null;
+  document.getElementById("profesion-nombre").value = profesion
+    ? profesion.nombre || ""
+    : "";
+  document.getElementById("profesion-descripcion").value = profesion
+    ? profesion.descripcion || ""
+    : "";
+  document.getElementById("titulo-modal-profesion").textContent = profesion
+    ? "Editar Profesión"
+    : "Nueva Profesión";
+  bsModalProfesion.show();
+}
+
+function cerrarModalProfesion() {
+  bsModalProfesion.hide();
+  document.getElementById("form-profesion").reset();
+  EstadoApp.idProfesionEditando = null;
+}
+
+/* Modal Mascota */
+function abrirModalMascota(mascota = null) {
+  EstadoApp.idMascotaEditando = mascota ? mascota.id : null;
+  document.getElementById("mascota-nombre").value = mascota
+    ? mascota.nombre || ""
+    : "";
+  document.getElementById("mascota-especie").value = mascota
+    ? mascota.especie || ""
+    : "";
+  document.getElementById("mascota-edad").value = mascota
+    ? mascota.edad || ""
+    : "";
+  document.getElementById("mascota-raza").value = mascota
+    ? mascota.raza || ""
+    : "";
+  document.getElementById("titulo-modal-mascota").textContent = mascota
+    ? "Editar Mascota"
+    : "Nueva Mascota";
+  bsModalMascota.show();
+}
+
+function cerrarModalMascota() {
+  bsModalMascota.hide();
+  document.getElementById("form-mascota").reset();
+  EstadoApp.idMascotaEditando = null;
+}
+
 /* Modal Persona */
 async function abrirModalPersona(persona = null) {
   await cargarSelectTiposDocumento();
@@ -538,6 +640,254 @@ async function cargarTablaDocumentos() {
   } catch (error) {
     cuerpoTabla.innerHTML = "<tr><td colspan='4'>Error al conectar.</td></tr>";
   }
+}
+
+function configurarFormularioProfesiones() {
+  document
+    .getElementById("form-profesion")
+    .addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+
+      const nombre = document
+        .getElementById("profesion-nombre")
+        .value.trim();
+      const descripcion = document
+        .getElementById("profesion-descripcion")
+        .value.trim();
+
+      if (!nombre) {
+        mostrarNotificacion("Por favor ingresa el nombre de la profesión.", "error");
+        return;
+      }
+
+      const esEdicion = EstadoApp.idProfesionEditando !== null;
+      const url = esEdicion
+        ? `${URL_BASE_API}/?PATH_INFO=profesiones/${EstadoApp.idProfesionEditando}`
+        : `${URL_BASE_API}/?PATH_INFO=profesiones`;
+      const metodo = esEdicion ? "PUT" : "POST";
+
+      try {
+        const respuesta = await fetchConAutenticacion(url, {
+          method: metodo,
+          body: JSON.stringify({
+            nombre: nombre,
+            descripcion: descripcion || null,
+          }),
+        });
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
+
+        if (resultado.code === 200 || resultado.code === 201) {
+          cerrarModalProfesion();
+          cargarTablaProfesiones();
+          mostrarNotificacion(
+            esEdicion ? "Profesión actualizada." : "Profesión creada correctamente.",
+          );
+        } else {
+          mostrarNotificacion("Hubo un problema al guardar.", "error");
+        }
+      } catch (error) {
+        mostrarNotificacion("Error de conexión.", "error");
+      }
+    });
+}
+
+async function cargarTablaProfesiones() {
+  const cuerpoTabla = document.getElementById("tabla-profesiones-cuerpo");
+  cuerpoTabla.innerHTML = "<tr><td colspan='4'>Cargando...</td></tr>";
+
+  try {
+    const respuesta = await fetchConAutenticacion(
+      `${URL_BASE_API}/?PATH_INFO=profesiones`,
+    );
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
+    const profesiones = Array.isArray(resultado.data)
+      ? resultado.data.filter((d) => !d.dateDelete)
+      : [];
+
+    EstadoApp.profesiones = profesiones;
+    cuerpoTabla.innerHTML = "";
+
+    if (profesiones.length === 0) {
+      cuerpoTabla.innerHTML =
+        "<tr><td colspan='4'>No hay profesiones registradas.</td></tr>";
+      return;
+    }
+
+    profesiones.forEach((profesion, indice) => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${indice + 1}</td>
+        <td>${profesion.nombre || ""}</td>
+        <td>${profesion.descripcion || "—"}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalProfesion(${JSON.stringify(profesion)})'>
+            <i class="bi bi-pencil-square me-1"></i>Editar
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="eliminarProfesion(${profesion.id})">
+            <i class="bi bi-trash me-1"></i>Eliminar
+          </button>
+        </td>
+      `;
+      cuerpoTabla.appendChild(fila);
+    });
+  } catch (error) {
+    cuerpoTabla.innerHTML = "<tr><td colspan='4'>Error al conectar.</td></tr>";
+  }
+}
+
+async function eliminarProfesion(id) {
+  mostrarConfirmacion(
+    "¿Seguro que deseas eliminar esta profesión?",
+    async () => {
+      try {
+        const respuesta = await fetchConAutenticacion(
+          `${URL_BASE_API}/?PATH_INFO=profesiones/${id}`,
+          { method: "DELETE" },
+        );
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
+        if (resultado.code === 200) {
+          cargarTablaProfesiones();
+          mostrarNotificacion("Profesión eliminada correctamente.");
+        } else {
+          mostrarNotificacion("No se pudo eliminar.", "error");
+        }
+      } catch (error) {
+        mostrarNotificacion("Error de conexión.", "error");
+      }
+    },
+  );
+}
+
+function configurarFormularioMascotas() {
+  document
+    .getElementById("form-mascota")
+    .addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+
+      const nombre = document
+        .getElementById("mascota-nombre")
+        .value.trim();
+      const especie = document
+        .getElementById("mascota-especie")
+        .value.trim();
+      const edad = document
+        .getElementById("mascota-edad")
+        .value.trim();
+      const raza = document
+        .getElementById("mascota-raza")
+        .value.trim();
+
+      if (!nombre) {
+        mostrarNotificacion("Por favor ingresa el nombre de la mascota.", "error");
+        return;
+      }
+
+      const esEdicion = EstadoApp.idMascotaEditando !== null;
+      const url = esEdicion
+        ? `${URL_BASE_API}/?PATH_INFO=mascotas/${EstadoApp.idMascotaEditando}`
+        : `${URL_BASE_API}/?PATH_INFO=mascotas`;
+      const metodo = esEdicion ? "PUT" : "POST";
+
+      try {
+        const respuesta = await fetchConAutenticacion(url, {
+          method: metodo,
+          body: JSON.stringify({
+            nombre: nombre,
+            especie: especie || null,
+            edad: edad ? parseInt(edad, 10) : null,
+            raza: raza || null,
+          }),
+        });
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
+
+        if (resultado.code === 200 || resultado.code === 201) {
+          cerrarModalMascota();
+          cargarTablaMascotas();
+          mostrarNotificacion(
+            esEdicion ? "Mascota actualizada." : "Mascota creada correctamente.",
+          );
+        } else {
+          mostrarNotificacion("Hubo un problema al guardar.", "error");
+        }
+      } catch (error) {
+        mostrarNotificacion("Error de conexión.", "error");
+      }
+    });
+}
+
+async function cargarTablaMascotas() {
+  const cuerpoTabla = document.getElementById("tabla-mascotas-cuerpo");
+  cuerpoTabla.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
+
+  try {
+    const respuesta = await fetchConAutenticacion(
+      `${URL_BASE_API}/?PATH_INFO=mascotas`,
+    );
+    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+    const resultado = await respuesta.json();
+    const mascotas = Array.isArray(resultado.data)
+      ? resultado.data.filter((d) => !d.dateDelete)
+      : [];
+
+    EstadoApp.mascotas = mascotas;
+    cuerpoTabla.innerHTML = "";
+
+    if (mascotas.length === 0) {
+      cuerpoTabla.innerHTML =
+        "<tr><td colspan='6'>No hay mascotas registradas.</td></tr>";
+      return;
+    }
+
+    mascotas.forEach((mascota, indice) => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${indice + 1}</td>
+        <td>${mascota.nombre || ""}</td>
+        <td>${mascota.especie || "—"}</td>
+        <td>${mascota.edad != null ? mascota.edad : "—"}</td>
+        <td>${mascota.raza || "—"}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-success me-1" onclick='abrirModalMascota(${JSON.stringify(mascota)})'>
+            <i class="bi bi-pencil-square me-1"></i>Editar
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="eliminarMascota(${mascota.id})">
+            <i class="bi bi-trash me-1"></i>Eliminar
+          </button>
+        </td>
+      `;
+      cuerpoTabla.appendChild(fila);
+    });
+  } catch (error) {
+    cuerpoTabla.innerHTML = "<tr><td colspan='6'>Error al conectar.</td></tr>";
+  }
+}
+
+async function eliminarMascota(id) {
+  mostrarConfirmacion(
+    "¿Seguro que deseas eliminar esta mascota?",
+    async () => {
+      try {
+        const respuesta = await fetchConAutenticacion(
+          `${URL_BASE_API}/?PATH_INFO=mascotas/${id}`,
+          { method: "DELETE" },
+        );
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        const resultado = await respuesta.json();
+        if (resultado.code === 200) {
+          cargarTablaMascotas();
+          mostrarNotificacion("Mascota eliminada correctamente.");
+        } else {
+          mostrarNotificacion("No se pudo eliminar.", "error");
+        }
+      } catch (error) {
+        mostrarNotificacion("Error de conexión.", "error");
+      }
+    },
+  );
 }
 
 async function cargarSelectTiposDocumento() {

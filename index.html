@@ -108,6 +108,18 @@
           >
             📄 Tipos de Documento
           </button>
+          <button
+            id="btn-nav-profesiones"
+            class="btn btn-outline-info btn-sm btn-nav"
+          >
+            💼 Profesiones
+          </button>
+          <button
+            id="btn-nav-mascotas"
+            class="btn btn-outline-info btn-sm btn-nav"
+          >
+            🐾 Mascotas
+          </button>
           <button id="btn-cerrar-sesion" class="btn btn-danger btn-sm">
             Cerrar Sesión
           </button>
@@ -185,6 +197,80 @@
                 <tbody id="tabla-personas-cuerpo">
                   <tr>
                     <td colspan="9">Cargando...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="crud-profesiones"
+          class="card bg-dark bg-opacity-75 border-secondary mb-4 oculto"
+        >
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h5 mb-0">Administración de Profesiones</h2>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="abrirModalProfesion()"
+              >
+                + Nueva Profesión
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table
+                class="table table-dark table-striped table-hover align-middle mb-0"
+              >
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-profesiones-cuerpo">
+                  <tr>
+                    <td colspan="4">Cargando...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="crud-mascotas"
+          class="card bg-dark bg-opacity-75 border-secondary mb-4 oculto"
+        >
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h5 mb-0">Administración de Mascotas</h2>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="abrirModalMascota()"
+              >
+                + Nueva Mascota
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table
+                class="table table-dark table-striped table-hover align-middle mb-0"
+              >
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Especie</th>
+                    <th>Edad</th>
+                    <th>Raza</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-mascotas-cuerpo">
+                  <tr>
+                    <td colspan="6">Cargando...</td>
                   </tr>
                 </tbody>
               </table>
@@ -368,6 +454,149 @@
                 <select id="persona-ciudad" class="form-select" disabled>
                   <option value="">-- Seleccione primero un estado --</option>
                 </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-outline-success">
+                Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modal-profesion"
+      tabindex="-1"
+      aria-labelledby="titulo-modal-profesion"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="titulo-modal-profesion">
+              Nueva Profesión
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <form id="form-profesion">
+            <div class="modal-body">
+              <input type="hidden" id="profesion-id" />
+              <div class="mb-3">
+                <label for="profesion-nombre" class="form-label"
+                  >Nombre de la Profesión: *</label
+                >
+                <input
+                  type="text"
+                  id="profesion-nombre"
+                  required
+                  placeholder="Ej: Ingeniero"
+                  class="form-control"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="profesion-descripcion" class="form-label"
+                  >Descripción:</label
+                >
+                <textarea
+                  id="profesion-descripcion"
+                  rows="3"
+                  class="form-control"
+                  placeholder="Ej: Especialista en sistemas"
+                ></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-outline-success">
+                Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modal-mascota"
+      tabindex="-1"
+      aria-labelledby="titulo-modal-mascota"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="titulo-modal-mascota">Nueva Mascota</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <form id="form-mascota">
+            <div class="modal-body">
+              <input type="hidden" id="mascota-id" />
+              <div class="mb-3">
+                <label for="mascota-nombre" class="form-label">Nombre: *</label>
+                <input
+                  type="text"
+                  id="mascota-nombre"
+                  required
+                  placeholder="Ej: Max"
+                  class="form-control"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="mascota-especie" class="form-label">Especie:</label>
+                <input
+                  type="text"
+                  id="mascota-especie"
+                  placeholder="Ej: Perro"
+                  class="form-control"
+                />
+              </div>
+              <div class="fila-doble">
+                <div class="mb-3">
+                  <label for="mascota-edad" class="form-label">Edad:</label>
+                  <input
+                    type="number"
+                    id="mascota-edad"
+                    min="0"
+                    placeholder="Ej: 3"
+                    class="form-control"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="mascota-raza" class="form-label">Raza:</label>
+                  <input
+                    type="text"
+                    id="mascota-raza"
+                    placeholder="Ej: Labrador"
+                    class="form-control"
+                  />
+                </div>
               </div>
             </div>
             <div class="modal-footer">
